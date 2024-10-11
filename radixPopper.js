@@ -58,7 +58,7 @@ window.addEventListener("load",function(){
                     // store data in browser storage
                     storeInBrowserStorage(conversationId, { title: conversationTitle })
 
-                    // add conversation to pinned list
+                    // remove the popup
                     radixPopperWrapperInnerDiv.remove()
                 })
 
