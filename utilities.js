@@ -35,7 +35,7 @@ function buildPinnedSectionHTML (list = []) {
                     </g>
                     </g>
                 </svg>   
-                <span>Pinned <span class="px-1 rounded-lg text-white bg-token-text-primary">ext</span></span>
+                <span>Pinned <span class="px-1 rounded-lg text-token-main-surface-primary bg-token-text-primary">ext</span></span>
                 </h3>
             </span>
         </div>
