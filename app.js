@@ -5,7 +5,6 @@ window.addEventListener("load", function () {
     console.log(tabsContainerInnerDiv);
     if (tabsContainerInnerDiv) {
       // retrieve pinned items
-
       retrieveFromBrowserStorage(null, (data = {}) => {
         const listItems = buildListItems(data);
         const pinnedSectionHTML = buildPinnedSectionHTML(listItems);
