@@ -106,13 +106,13 @@ function buildListItems(conversations) {
     const newListItem = createElementFromHTML(listHtmlString);
     const closeButton = newListItem.querySelector(".pin-ext-close-btn");
     closeButton.addEventListener("click", () =>
-      unpinConversation(closeButton, key)
+      unpinConversation(closeButton, key),
     );
 
     // adding listener for the pinned items anchor tags
     newListItem.querySelector(`#${id}`).addEventListener("click", (e) => {
       let elements = document.querySelector(
-        ".flex.flex-col.gap-2.pb-2.text-token-text-primary.text-sm.mt-5 > div"
+        ".flex.flex-col.gap-2.pb-2.text-token-text-primary.text-sm.mt-5 > div",
       );
       // first div is the pinned div
       elements = Array.from(elements.children).slice(1);
@@ -127,7 +127,7 @@ function buildListItems(conversations) {
         matches = [
           ...matches,
           ...listItems.filter(
-            (elem) => elem.attributes.href.value === `/c/${key}`
+            (elem) => elem.attributes.href.value === `/c/${key}`,
           ),
         ];
       }
@@ -215,7 +215,7 @@ function pollForElement(selector, callback, interval = 100, maxAttempts = 50) {
       if (attempts >= maxAttempts) {
         clearInterval(poll); // Stop polling after max attempts
         console.warn(
-          `Element with selector "${selector}" not found after ${maxAttempts} attempts.`
+          `Element with selector "${selector}" not found after ${maxAttempts} attempts.`,
         );
       }
     }

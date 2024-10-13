@@ -1,12 +1,12 @@
-
 /* start: handle pinned items hover - show close btn */
-.pin-ext-close-span, .pin-ext-li-fader {
-   display: none;
+.pin-ext-close-span,
+.pin-ext-li-fader {
+  display: none;
 }
-.pin-ext-li:hover div > div.pin-ext-li-fader{
-    display: block;
+.pin-ext-li:hover div > div.pin-ext-li-fader {
+  display: block;
 }
-.pin-ext-li:hover div > div > span.pin-ext-close-span{
-    display: block;
+.pin-ext-li:hover div > div > span.pin-ext-close-span {
+  display: block;
 }
 /* end: handle pinned items hover */
