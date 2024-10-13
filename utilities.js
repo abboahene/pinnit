@@ -1,27 +1,27 @@
 //create html element
 function createElement(payload = {}) {
-    const {tag, attrs = {}, content} = payload
-    const element = document.createElement(tag)
+  const { tag, attrs = {}, content } = payload;
+  const element = document.createElement(tag);
 
-    for(let key of Object.keys(attrs)){
-        element.setAttribute(key, attrs[key])
-    }
-        
-    if(content) element.appendChild(content)
-        
-    return element
+  for (let key of Object.keys(attrs)) {
+    element.setAttribute(key, attrs[key]);
+  }
+
+  if (content) element.appendChild(content);
+
+  return element;
 }
 
 // create element from html string
 function createElementFromHTML(htmlString) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(htmlString, 'text/html');
-    return doc.body.firstChild;
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlString, "text/html");
+  return doc.body.firstChild;
 }
 
 // build group pinned section
-function buildPinnedSectionHTML (list = []) {
-    const pinnedSectionHtml = `
+function buildPinnedSectionHTML(list = []) {
+  const pinnedSectionHtml = `
         <div class="sticky z-20 bg-token-sidebar-surface-primary top-0">
             <span class="flex h-9 items-center">
                 <h3 class="flex items-center pb-2 pt-3 px-2 text-xs font-semibold text-ellipsis overflow-hidden break-all text-token-text-primary">
@@ -39,20 +39,23 @@ function buildPinnedSectionHTML (list = []) {
                 </h3>
             </span>
         </div>
-        `
-    
-    const pinnedSection = createElementFromHTML(pinnedSectionHtml)
-    const conversationList = createElement({tag: "ol", attrs: {id: "pinned-list-ol"}})
-    for(let li of list){
-        conversationList.appendChild(li)
-    }
-    pinnedSection.append(conversationList)
-    console.log(pinnedSection, "building section")
-    return pinnedSection
+        `;
+
+  const pinnedSection = createElementFromHTML(pinnedSectionHtml);
+  const conversationList = createElement({
+    tag: "ol",
+    attrs: { id: "pinned-list-ol" },
+  });
+  for (let li of list) {
+    conversationList.appendChild(li);
+  }
+  pinnedSection.append(conversationList);
+  console.log(pinnedSection, "building section");
+  return pinnedSection;
 }
 
-function buildPinMenuItemHTML(){
-    const pinMenuItemHTML = `
+function buildPinMenuItemHTML() {
+  const pinMenuItemHTML = `
     <div class="flex w-5">
         <div class="flex items-center justify-center text-token-text-secondary h-5 pr-4">
             <svg class="icon" width="20px" height="20px" viewBox="0 0 24 24" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
@@ -68,20 +71,21 @@ function buildPinMenuItemHTML(){
         </div>
         Pin
     </div>
-    `
-    return createElementFromHTML(pinMenuItemHTML)
+    `;
+  return createElementFromHTML(pinMenuItemHTML);
 }
 
 // build coversation lists
 function buildListItems(conversations) {
-    const listItems = []
+  const listItems = [];
 
-    for(let key of Object.keys(conversations)){
+  for (let key of Object.keys(conversations)) {
+    const id = `${"pinnit-" + key}`;
 
-        const listHtmlString= `
+    const listHtmlString = `
         <li id=${key} class="pin-ext-li relative" pinned-data-id="history-item-0" style="height: auto;">
             <div class="no-draggable group relative rounded-lg hover:bg-token-sidebar-surface-secondary">
-                <a class="pin-ext-a flex items-center gap-2 p-2" data-discover="true" href="/c/${key}" >
+                <a id="${id}" class="pin-ext-a flex items-center gap-2 p-2" data-discover="true" href="/c/${key}" >
                     <div class="relative grow overflow-hidden whitespace-nowrap">
                         ${conversations[key].title}
                         <div class="pin-ext-li-fader absolute bottom-0 top-0 to-transparent ltr:right-0 ltr:bg-gradient-to-l rtl:left-0 rtl:bg-gradient-to-r from-token-sidebar-surface-secondary w-10 from-60%"></div>
@@ -98,83 +102,122 @@ function buildListItems(conversations) {
                 </div>
             </div>
         </li>
-        `
-        const newListItem = createElementFromHTML(listHtmlString)
-        const closeButton = newListItem.querySelector(".pin-ext-close-btn")
-        closeButton.addEventListener("click", () => unpinConversation(closeButton, key))
+        `;
+    const newListItem = createElementFromHTML(listHtmlString);
+    const closeButton = newListItem.querySelector(".pin-ext-close-btn");
+    closeButton.addEventListener("click", () =>
+      unpinConversation(closeButton, key)
+    );
 
-        listItems.push(newListItem)
-    }
-    return listItems
+    // adding listener for the pinned items anchor tags
+    newListItem.querySelector(`#${id}`).addEventListener("click", (e) => {
+      let elements = document.querySelector(
+        ".flex.flex-col.gap-2.pb-2.text-token-text-primary.text-sm.mt-5 > div"
+      );
+      // first div is the pinned div
+      elements = Array.from(elements.children).slice(1);
+      let matches = [];
+      for (elem of elements) {
+        if (matches.length > 0) {
+          // early return no need to scan more
+          // since there will be only one match
+          break;
+        }
+        const listItems = Array.from(elem.querySelectorAll("li a"));
+        matches = [
+          ...matches,
+          ...listItems.filter(
+            (elem) => elem.attributes.href.value === `/c/${key}`
+          ),
+        ];
+      }
+
+      // only if the selection matches to one of the list items in the dom
+      if (matches.length > 0) {
+        // stop default action
+        e.preventDefault();
+        // stop event from propagating
+        e.stopPropagation();
+        // forcefully click the default click, which will take care of executing
+        // the default behavior set by the chatgpt team
+        matches[0].click();
+      }
+    });
+
+    listItems.push(newListItem);
+  }
+  return listItems;
 }
 
 // Store data in chrome storage
-function storeInBrowserStorage(key, value){
-    chrome.storage.local.set({[key]: value}, () => {
-        if (chrome.runtime.lastError) {
-            console.error('Error saving key:', chrome.runtime.lastError);
-        } else {
-            console.log("Data saved to chrome storage with key:", key);
-        }
-    });
+function storeInBrowserStorage(key, value) {
+  chrome.storage.local.set({ [key]: value }, () => {
+    if (chrome.runtime.lastError) {
+      console.error("Error saving key:", chrome.runtime.lastError);
+    } else {
+      console.log("Data saved to chrome storage with key:", key);
+    }
+  });
 }
 
 // Retrieve data from chrome storage
-function retrieveFromBrowserStorage(keys = [], callback){
-    chrome.storage.local.get(keys, (result) => {
-        if (chrome.runtime.lastError) {
-            console.error('Error retrieving key:', chrome.runtime.lastError);
-        } else {
-            console.log("Data retrieved from chrome storage:", result);
-            if(callback) callback(result || {})
-        }
-    });
+function retrieveFromBrowserStorage(keys = [], callback) {
+  chrome.storage.local.get(keys, (result) => {
+    if (chrome.runtime.lastError) {
+      console.error("Error retrieving key:", chrome.runtime.lastError);
+    } else {
+      console.log("Data retrieved from chrome storage:", result);
+      if (callback) callback(result || {});
+    }
+  });
 }
 
 // Remove data from chrome storage
 function removeFromBrowserStorage(key) {
-    chrome.storage.local.remove(key, () => {
-        if (chrome.runtime.lastError) {
-            console.error('Error removing key:', chrome.runtime.lastError);
-        } else {
-            console.log(`Key '${key}' removed from storage.`);
-        }
-    });
+  chrome.storage.local.remove(key, () => {
+    if (chrome.runtime.lastError) {
+      console.error("Error removing key:", chrome.runtime.lastError);
+    } else {
+      console.log(`Key '${key}' removed from storage.`);
+    }
+  });
 }
 
 // Clear data from chrome storage
 function clearBrowserStorage() {
-    chrome.storage.local.clear(() => {
-        if (chrome.runtime.lastError) {
-            console.error('Error clearing storage:', chrome.runtime.lastError);
-        } else {
-            console.log('All data cleared from storage.');
-        }
-    });
+  chrome.storage.local.clear(() => {
+    if (chrome.runtime.lastError) {
+      console.error("Error clearing storage:", chrome.runtime.lastError);
+    } else {
+      console.log("All data cleared from storage.");
+    }
+  });
 }
 
 // unpin a conversation
 function unpinConversation(closeButton, key) {
-    removeFromBrowserStorage(key)
-    const listItem = closeButton.closest("li")
-    listItem.remove()
+  removeFromBrowserStorage(key);
+  const listItem = closeButton.closest("li");
+  listItem.remove();
 }
 
 function pollForElement(selector, callback, interval = 100, maxAttempts = 50) {
-    let attempts = 0;
+  let attempts = 0;
 
-    const poll = setInterval(() => {
-        const element = document.querySelector(selector);
-        
-        if (element) {
-            clearInterval(poll); // Stop polling if the element is found
-            callback(element); // Call the callback function with the found element
-        } else {
-            attempts++;
-            if (attempts >= maxAttempts) {
-                clearInterval(poll); // Stop polling after max attempts
-                console.warn(`Element with selector "${selector}" not found after ${maxAttempts} attempts.`);
-            }
-        }
-    }, interval);
+  const poll = setInterval(() => {
+    const element = document.querySelector(selector);
+
+    if (element) {
+      clearInterval(poll); // Stop polling if the element is found
+      callback(element); // Call the callback function with the found element
+    } else {
+      attempts++;
+      if (attempts >= maxAttempts) {
+        clearInterval(poll); // Stop polling after max attempts
+        console.warn(
+          `Element with selector "${selector}" not found after ${maxAttempts} attempts.`
+        );
+      }
+    }
+  }, interval);
 }
