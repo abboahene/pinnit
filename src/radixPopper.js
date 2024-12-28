@@ -1,9 +1,9 @@
 window.addEventListener("load", function () {
-  document.addEventListener("click", function (event) {
+  document.addEventListener("pointerdown", function (event) {
     // inplant pin in popper
     let buttonParentElement = event.target.parentElement;
-    const buttonParentClass =
-      ".flex.items-center.justify-center.text-token-text-secondary.transition";
+
+    const buttonParentDataId = /history-item-\d-options/;
 
     // making sure it is always the button
     if (buttonParentElement.matches("svg")) {
@@ -11,41 +11,59 @@ window.addEventListener("load", function () {
     }
 
     // if click was on action button
-    if (buttonParentElement.matches(buttonParentClass)) {
+    console.log(
+      "is button: ",
+      buttonParentDataId.test(buttonParentElement.getAttribute("data-testid")),
+    );
+
+    if (
+      buttonParentDataId.test(buttonParentElement.getAttribute("data-testid"))
+    ) {
       console.log("popper is opened!!!");
 
-      const radixPopperWrapperInnerDiv = document.querySelector(
-        "[data-radix-popper-content-wrapper] > div",
+      const firstMenuItemChild = document.querySelector(
+        "[data-testid=share-chat-menu-item]",
       );
 
+      if (!firstMenuItemChild) return;
+
+      const radixPopperWrapperInnerDiv = firstMenuItemChild.parentElement;
+      const pinMenuItem = firstMenuItemChild.cloneNode(true);
+      console.log("pinned child:", pinMenuItem);
+      console.log("pinned child first:", pinMenuItem.firstChild);
+      pinMenuItem.firstChild.innerHTML = `
+            <svg class="icon" width="20px" height="20px" viewBox="0 0 24 24" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+                <g transform="translate(0 -1028.4)">
+                <g transform="matrix(.70711 .70711 -.70711 .70711 737.68 297.72)">
+                <path d="m11 1028.4v13h1 6.406c-0.595-1.1-1.416-2.1-2.406-2.8v-8c0.616-0.6 1.131-1.4 1.531-2.2h-5.531-1z" fill="#c0392b"/>
+                <path d="m11 13v2 4 2l1 2v-2-6-2h-1z" transform="translate(0 1028.4)" fill="#bdc3c7"/>
+                <path d="m12 13v2 4 2 2l1-2v-2-4-2h-1z" transform="translate(0 1028.4)" fill="#7f8c8d"/>
+                <path d="m6.4688 1028.4c0.4006 0.8 0.915 1.6 1.5312 2.2v8c-0.9897 0.7-1.8113 1.7-2.4062 2.8h6.4062v-13h-5.5312z" fill="#e74c3c"/>
+                </g>
+                </g>
+            </svg> 
+      `;
+      pinMenuItem.lastChild.textContent = "Pin";
+
       if (radixPopperWrapperInnerDiv) {
-        const clazz =
-          "flex items-center m-1.5 p-2.5 text-sm cursor-pointer focus-visible:outline-0 radix-disabled:pointer-events-none radix-disabled:opacity-50 group relative hover:bg-[#f5f5f5] focus-visible:bg-[#f5f5f5] radix-state-open:bg-[#f5f5f5] dark:hover:bg-token-main-surface-secondary dark:focus-visible:bg-token-main-surface-secondary rounded-md my-0 px-3 mx-2 dark:radix-state-open:bg-token-main-surface-secondary gap-2.5 py-3";
-        const pinMenuItem = createElement({
-          tag: "div",
-          attrs: {
-            class: clazz,
-            tabIndex: "-1",
-            "data-radix-collection-item": "",
-            "data-orientation": "vertical",
-            role: "menuitem",
-          },
-          content: buildPinMenuItemHTML(),
-        });
+        radixPopperWrapperInnerDiv.insertBefore(
+          pinMenuItem,
+          firstMenuItemChild,
+        );
+
+        // buttonParentElement.click()
 
         // add event listener to pin button
         pinMenuItem.addEventListener("click", () => {
           // get conversation title & url
-          const noDragableParentDiv = buttonParentElement.closest(
-            ".no-draggable.group.relative",
-          );
-          const conversationUrl = noDragableParentDiv
+          const listItem = buttonParentElement.closest("li");
+          const conversationUrl = listItem
             .querySelector("a")
             .getAttribute("href");
-          const conversationTitle = noDragableParentDiv
+          const conversationTitle = listItem
             .querySelector("a > div")
             .textContent.trim();
-          console.log(conversationTitle, conversationUrl, "testing!!!");
+          console.log("Title: ", conversationTitle, "URL", conversationUrl);
           // get conversation id
           const conversationId = conversationUrl.split("c/").at(-1);
 
@@ -77,11 +95,6 @@ window.addEventListener("load", function () {
           // remove the popup
           radixPopperWrapperInnerDiv.remove();
         });
-
-        radixPopperWrapperInnerDiv.insertBefore(
-          pinMenuItem,
-          radixPopperWrapperInnerDiv.firstChild,
-        );
       }
     }
   });
